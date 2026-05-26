@@ -19,7 +19,7 @@ export default function CreateProduct() {
     if (error) {
       setMessage('Erro ao cadastrar produto: ' + error.message)
     } else {
-      setMessage('Produto cadastrado!')
+      setMessage('Produto com erro!')
       setName('')
       setPrice('')
       setTimeout(() => navigate('/dashboard'), 1000)

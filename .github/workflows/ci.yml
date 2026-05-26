@@ -15,5 +15,5 @@ jobs:
         with:
           node-version: 24
       - run: npm ci
-      - run: npm run build # opcional, se quiser checar build
+      - run: npm run build
       - run: npx vitest --run
