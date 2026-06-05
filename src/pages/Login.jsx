@@ -36,7 +36,7 @@ export default function Login() {
       {/* Card */}
       <div className="relative w-full max-w-md backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl rounded-2xl p-8">
         {/* Title */}
-        <h1 className="text-3xl font-bold text-white text-center">
+        <h1 className="text-white text-center tw-debug-white">
           Auto Escola
         </h1>
         <p className="text-center text-white/70 mt-2 mb-8">
