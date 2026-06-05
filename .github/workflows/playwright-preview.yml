@@ -24,17 +24,15 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.TEST_SERVER_SSH_KEY }}
 
-      - name: Compute branch slug and port
+      - name: Compute branch slug
         id: branch
         run: |
           BRANCH_SLUG=$(echo "${{ github.head_ref }}" \
             | sed 's/[^a-zA-Z0-9]/-/g' \
             | tr '[:upper:]' '[:lower:]' \
             | cut -c1-20)
-          PORT=$(( 10000 + $(echo "$BRANCH_SLUG" | cksum | cut -d' ' -f1) % 5000 ))
           TEST_URL="https://${BRANCH_SLUG}.dev.${{ env.DOMAIN }}"
           echo "slug=$BRANCH_SLUG"  >> "$GITHUB_OUTPUT"
-          echo "port=$PORT"         >> "$GITHUB_OUTPUT"
           echo "test_url=$TEST_URL" >> "$GITHUB_OUTPUT"
 
       - name: Deploy branch on test server
@@ -44,7 +42,7 @@ jobs:
               "${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}" \
               "DEPLOY_BASE='${{ env.DEPLOY_BASE }}' DOMAIN='${{ env.DOMAIN }}' \
                bash '${{ env.DEPLOY_BASE }}/.github/scripts/test-deploy-manager.sh' \
-               deploy '${{ github.head_ref }}' '${{ steps.branch.outputs.port }}'"
+               deploy '${{ github.head_ref }}'"
 
       - name: Wait for application to be ready
         run: |
