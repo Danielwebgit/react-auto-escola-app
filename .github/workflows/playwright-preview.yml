@@ -7,7 +7,7 @@ on:
       - main
 
 env:
-  DEPLOY_BASE: /var/www/html/playWright-end-app-for-test
+  DEPLOY_BASE: /root/playWright-end-app-for-test
   DOMAIN: ${{ secrets.TEST_DOMAIN }}
   SERVER_USER: ${{ secrets.TEST_SERVER_USER }}
   SERVER_HOST: ${{ secrets.TEST_SERVER_HOST }}
