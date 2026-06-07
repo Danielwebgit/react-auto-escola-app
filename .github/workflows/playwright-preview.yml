@@ -64,10 +64,13 @@ jobs:
       - name: Copy Playwright report
         if: always()
         run: |
-          REPORT_SRC="${{ env.DEPLOY_BASE }}/play-wright-react-auto-escola-app/playwright-report"
+          PW_DIR="${{ env.DEPLOY_BASE }}/play-wright-react-auto-escola-app"
           rm -rf playwright-report
           mkdir -p playwright-report
-          sudo cp -r "$REPORT_SRC/." ./playwright-report/ 2>/dev/null || echo "Aviso: relatório não encontrado."
+          sudo cp -r "$PW_DIR/playwright-report/." ./playwright-report/ 2>/dev/null \
+            || echo "Aviso: relatório não encontrado."
+          sudo cp -r "$PW_DIR/global-setup-debug" ./playwright-report/global-setup-debug 2>/dev/null \
+            || true
           sudo chown -R "$(id -u):$(id -g)" ./playwright-report
 
       - name: Upload Playwright report
