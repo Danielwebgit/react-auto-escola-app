@@ -6,6 +6,11 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
 env:
   DEPLOY_BASE: /root/playWright-end-app-for-test
   DOMAIN: ${{ secrets.TEST_DOMAIN }}
