@@ -6,50 +6,45 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
 env:
   DEPLOY_BASE: /root/playWright-end-app-for-test
-  DOMAIN: ${{ secrets.TEST_DOMAIN }}
-  SERVER_USER: ${{ secrets.TEST_SERVER_USER }}
-  SERVER_HOST: ${{ secrets.TEST_SERVER_HOST }}
-  SERVER_PORT: ${{ secrets.TEST_SERVER_PORT || '22' }}
+  DOMAIN: ${{ vars.TEST_DOMAIN }}
 
 jobs:
   deploy-and-test:
     if: github.event.action != 'closed'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, preview-server]
 
     steps:
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.8.0
-        with:
-          ssh-private-key: ${{ secrets.TEST_SERVER_SSH_KEY }}
-
       - name: Compute branch slug
         id: branch
         run: |
           BRANCH_SLUG=$(echo "${{ github.head_ref }}" \
             | sed 's/[^a-zA-Z0-9]/-/g' \
             | tr '[:upper:]' '[:lower:]' \
-            | cut -c1-20)
-          TEST_URL="https://${BRANCH_SLUG}.dev.${{ env.DOMAIN }}"
+            | cut -c1-20 \
+            | sed 's/-*$//')
+          TEST_URL="http://${BRANCH_SLUG}.dev.${{ env.DOMAIN }}"
           echo "slug=$BRANCH_SLUG"  >> "$GITHUB_OUTPUT"
           echo "test_url=$TEST_URL" >> "$GITHUB_OUTPUT"
 
       - name: Deploy branch on test server
         run: |
-          ssh -o StrictHostKeyChecking=accept-new \
-              -p "${{ env.SERVER_PORT }}" \
-              "${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}" \
-              "DEPLOY_BASE='${{ env.DEPLOY_BASE }}' DOMAIN='${{ env.DOMAIN }}' \
-               bash '${{ env.DEPLOY_BASE }}/.github/scripts/test-deploy-manager.sh' \
-               deploy '${{ github.head_ref }}'"
+          sudo env DEPLOY_BASE="${{ env.DEPLOY_BASE }}" DOMAIN="${{ env.DOMAIN }}" \
+            bash "${{ env.DEPLOY_BASE }}/.github/scripts/test-deploy-manager.sh" \
+            deploy "${{ github.head_ref }}"
 
       - name: Wait for application to be ready
         run: |
           TEST_URL="${{ steps.branch.outputs.test_url }}"
           echo "Aguardando $TEST_URL..."
           for i in $(seq 1 30); do
-            if curl -sf -k "$TEST_URL" >/dev/null 2>&1; then
+            if curl -sf "$TEST_URL" >/dev/null 2>&1; then
               echo "Pronto na tentativa $i."
               exit 0
             fi
@@ -63,23 +58,21 @@ jobs:
         id: playwright
         continue-on-error: true
         run: |
-          ssh -o StrictHostKeyChecking=accept-new \
-              -p "${{ env.SERVER_PORT }}" \
-              "${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}" \
-              "DEPLOY_BASE='${{ env.DEPLOY_BASE }}' \
-               bash '${{ env.DEPLOY_BASE }}/.github/scripts/test-deploy-manager.sh' \
-               run-tests '${{ steps.branch.outputs.slug }}' '${{ steps.branch.outputs.test_url }}'"
+          sudo env DEPLOY_BASE="${{ env.DEPLOY_BASE }}" \
+            bash "${{ env.DEPLOY_BASE }}/.github/scripts/test-deploy-manager.sh" \
+            run-tests "${{ steps.branch.outputs.slug }}" "${{ steps.branch.outputs.test_url }}"
 
-      - name: Copy Playwright report from server
+      - name: Copy Playwright report
         if: always()
         run: |
+          PW_DIR="${{ env.DEPLOY_BASE }}/play-wright-react-auto-escola-app"
+          rm -rf playwright-report
           mkdir -p playwright-report
-          scp -r \
-              -o StrictHostKeyChecking=accept-new \
-              -P "${{ env.SERVER_PORT }}" \
-              "${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}:${{ env.DEPLOY_BASE }}/play-wright-react-auto-escola-app/playwright-report/." \
-              ./playwright-report/ \
+          sudo cp -r "$PW_DIR/playwright-report/." ./playwright-report/ 2>/dev/null \
             || echo "Aviso: relatório não encontrado."
+          sudo cp -r "$PW_DIR/global-setup-debug" ./playwright-report/global-setup-debug 2>/dev/null \
+            || true
+          sudo chown -R "$(id -u):$(id -g)" ./playwright-report
 
       - name: Upload Playwright report
         if: always()
@@ -118,28 +111,21 @@ jobs:
 
   cleanup:
     if: github.event.action == 'closed'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, preview-server]
 
     steps:
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.8.0
-        with:
-          ssh-private-key: ${{ secrets.TEST_SERVER_SSH_KEY }}
-
       - name: Compute branch slug
         id: branch
         run: |
           BRANCH_SLUG=$(echo "${{ github.head_ref }}" \
             | sed 's/[^a-zA-Z0-9]/-/g' \
             | tr '[:upper:]' '[:lower:]' \
-            | cut -c1-20)
+            | cut -c1-20 \
+            | sed 's/-*$//')
           echo "slug=$BRANCH_SLUG" >> "$GITHUB_OUTPUT"
 
       - name: Cleanup preview deploy
         run: |
-          ssh -o StrictHostKeyChecking=accept-new \
-              -p "${{ env.SERVER_PORT }}" \
-              "${{ env.SERVER_USER }}@${{ env.SERVER_HOST }}" \
-              "DEPLOY_BASE='${{ env.DEPLOY_BASE }}' DOMAIN='${{ env.DOMAIN }}' \
-               bash '${{ env.DEPLOY_BASE }}/.github/scripts/test-deploy-manager.sh' \
-               cleanup '${{ steps.branch.outputs.slug }}'"
+          sudo env DEPLOY_BASE="${{ env.DEPLOY_BASE }}" DOMAIN="${{ env.DOMAIN }}" \
+            bash "${{ env.DEPLOY_BASE }}/.github/scripts/test-deploy-manager.sh" \
+            cleanup "${{ steps.branch.outputs.slug }}"
