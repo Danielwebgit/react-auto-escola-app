@@ -27,7 +27,8 @@ jobs:
           BRANCH_SLUG=$(echo "${{ github.head_ref }}" \
             | sed 's/[^a-zA-Z0-9]/-/g' \
             | tr '[:upper:]' '[:lower:]' \
-            | cut -c1-20)
+            | cut -c1-20 \
+            | sed 's/-*$//')
           TEST_URL="http://${BRANCH_SLUG}.dev.${{ env.DOMAIN }}"
           echo "slug=$BRANCH_SLUG"  >> "$GITHUB_OUTPUT"
           echo "test_url=$TEST_URL" >> "$GITHUB_OUTPUT"
@@ -119,7 +120,8 @@ jobs:
           BRANCH_SLUG=$(echo "${{ github.head_ref }}" \
             | sed 's/[^a-zA-Z0-9]/-/g' \
             | tr '[:upper:]' '[:lower:]' \
-            | cut -c1-20)
+            | cut -c1-20 \
+            | sed 's/-*$//')
           echo "slug=$BRANCH_SLUG" >> "$GITHUB_OUTPUT"
 
       - name: Cleanup preview deploy
