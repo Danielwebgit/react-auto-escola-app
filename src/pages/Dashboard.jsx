@@ -65,7 +65,7 @@ export default function Dashboard() {
               >Excluir</button>
             </li>
           ))}
-          {products.length === 0 && <li className="text-white/70 text-center py-4">Ainda não existem produtos cadastrados.</li>}
+          {products.length === 0 && <li className="text-white/70 text-center py-4">Não há produtos cadastrados.</li>}
         </ul>
       </div>
     </div>
