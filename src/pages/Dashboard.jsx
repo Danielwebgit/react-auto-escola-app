@@ -50,7 +50,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 flex flex-col items-center py-10">
       <div className="w-full max-w-md flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-white">Produtos Cadastrados</h1>
+        <h1 className="text-2xl font-bold text-white">Lista de Produtos</h1>
         <button onClick={() => navigate('/criar-produto')} className="px-4 py-2 rounded bg-green-500 text-white hover:bg-green-600 transition ml-4">Novo Produto</button>
         <button onClick={handleLogout} className="px-4 py-2 rounded bg-red-500 text-white hover:bg-red-600 transition ml-4">Logout</button>
       </div>
