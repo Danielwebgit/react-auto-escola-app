@@ -120,6 +120,12 @@ jobs:
               body,
             });
 
+      - name: Fail job if tests failed
+        if: steps.playwright.outcome == 'failure'
+        run: |
+          echo "Testes Playwright falharam — bloqueando merge."
+          exit 1
+
   cleanup:
     if: github.event.action == 'closed'
     runs-on: [self-hosted, preview-server]
